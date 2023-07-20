@@ -1,0 +1,5 @@
+/target
+/puzzle-logic-gates/rust/target/
+/puzzle-logic-gates/cpp/cmake-build-debug/
+/venv/
+/.idea/
