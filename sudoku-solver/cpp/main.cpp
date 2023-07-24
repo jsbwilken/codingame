@@ -67,6 +67,11 @@ std::vector<char> calculate_possibilities(std::vector<std::vector<char>> &board,
 
 void solve_sudoku(std::vector<std::vector<char>> &board) {
     bool board_changed = false;
+
+    int lowest_i = -1;
+    int lowest_n = -1;
+    std::vector<char> lowest_possibilities;
+
     while (!is_solved(board))
     {
         for(auto i = 0; i < board.size(); i++)
@@ -78,33 +83,60 @@ void solve_sudoku(std::vector<std::vector<char>> &board) {
                 }
                 auto possibilities = calculate_possibilities(board, i, n);
 
+                if(possibilities.empty()) {
+                    throw std::runtime_error("Possibility Array is empty");
+                }
                 if(possibilities.size() == 1) {
                     board[i][n] = possibilities[0];
                     board_changed = true;
+                }
+                else if(lowest_possibilities.empty() || lowest_possibilities.size() > possibilities.size()) {
+                    lowest_possibilities = possibilities;
+                    lowest_i = i;
+                    lowest_n = n;
                 }
             }
         }
 
         if(!board_changed){
-            //TODO: Add handling of multiple possibilities
-            throw std::exception();
+            for (auto possibility: lowest_possibilities) {
+                try {
+                    auto board_copy = board;
+                    board_copy[lowest_i][lowest_n] = possibility;
+                    solve_sudoku(board_copy);
+                    if(is_solved(board_copy)) {
+                        board.swap(board_copy);
+                    }
+                    break;
+                }
+                catch (std::runtime_error &exc) {
+                    std::cout << exc.what() << " " << lowest_i << " " << lowest_n << " " << possibility << std::endl;
+                }
+            }
+
+            if(!is_solved(board)) {
+                throw std::runtime_error("Multiple possibilities exhausted, backtracking...");
+            }
         }
         board_changed = false;
+        lowest_i = -1;
+        lowest_n = -1;
+        lowest_possibilities.clear();
     }
 }
 
 int main()
 {
     std::vector<std::vector<char>> board({
-        std::vector<char>({'5','3','.','.','7','.','.','.','.'}),
-        std::vector<char>({'6','.','.','1','9','5','.','.','.'}),
-        std::vector<char>({'.','9','8','.','.','.','.','6','.'}),
-        std::vector<char>({'8','.','.','.','6','.','.','.','3'}),
-        std::vector<char>({'4','.','.','8','.','3','.','.','1'}),
-        std::vector<char>({'7','.','.','.','2','.','.','.','6'}),
-        std::vector<char>({'.','6','.','.','.','.','2','8','.'}),
-        std::vector<char>({'.','.','.','4','1','9','.','.','5'}),
-        std::vector<char>({'.','.','.','.','8','.','.','7','9'})
+        std::vector<char>({'.','.','9','7','4','8','.','.','.'}),
+        std::vector<char>({'7','.','.','.','.','.','.','.','.'}),
+        std::vector<char>({'.','2','.','1','.','9','.','.','.'}),
+        std::vector<char>({'.','.','7','.','.','.','2','4','.'}),
+        std::vector<char>({'.','6','4','.','1','.','5','9','.'}),
+        std::vector<char>({'.','9','8','.','.','.','3','.','.'}),
+        std::vector<char>({'.','.','.','8','.','3','.','2','.'}),
+        std::vector<char>({'.','.','.','.','.','.','.','.','6'}),
+        std::vector<char>({'.','.','.','2','7','5','9','.','.'})
     });
 
     solve_sudoku(board);
